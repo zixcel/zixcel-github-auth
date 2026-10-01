@@ -33,7 +33,7 @@ export function acceptGitHubDeviceCodeResponse(declaration, input) {
 export async function pollGitHubDeviceAuthorization(attempt, input, transport, custody) {
   validateAttempt(attempt)
   const now = integer(input?.nowUnixMs, 0, 'time')
-  if (now > attempt.expiresAtUnixMs) invalid('attempt-expired')
+  if (now >= attempt.expiresAtUnixMs) invalid('attempt-expired')
   if (now < attempt.nextPollUnixMs) invalid('poll-early')
   const response = await send(transport, tokenUrl, form({ client_id: attempt.clientId,
     device_code: attempt.deviceCode,
@@ -66,10 +66,12 @@ export async function completeGitHubDeviceAuthorization(
 }
 
 function pending(attempt, wire, now) {
-  if (wire.error === 'authorization_pending') return freeze({ status: 'pending',
-    nextPollUnixMs: now + attempt.intervalSeconds * 1000 })
-  if (wire.error === 'slow_down') return freeze({ status: 'pending',
-    nextPollUnixMs: now + (attempt.intervalSeconds + 5) * 1000 })
+  if (wire.error === 'authorization_pending' || wire.error === 'slow_down') {
+    const intervalSeconds = attempt.intervalSeconds + (wire.error === 'slow_down' ? 5 : 0)
+    const nextPollUnixMs = now + intervalSeconds * 1000
+    return freeze({ status: 'pending', nextPollUnixMs,
+      attempt: { ...attempt, intervalSeconds, nextPollUnixMs } })
+  }
   if (['access_denied', 'expired_token', 'incorrect_device_code'].includes(wire.error)) {
     invalid(wire.error)
   }

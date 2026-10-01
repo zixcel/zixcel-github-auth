@@ -66,7 +66,8 @@ export function acceptGitHubDeviceCodeResponse(declaration: GitHubAuthDeclaratio
     response: { status: number, body: string } }): GitHubDeviceAttempt
 export function pollGitHubDeviceAuthorization(attempt: GitHubDeviceAttempt,
   input: { nowUnixMs: number }, transport: AuthTransport,
-  custody: GitHubTokenCustody): Promise<{ status: 'pending', nextPollUnixMs: number }
+  custody: GitHubTokenCustody): Promise<{ status: 'pending', nextPollUnixMs: number,
+      attempt: GitHubDeviceAttempt }
     | { status: 'user-verification-required', authorization: GitHubPasskeyAuthorization }>
 export function completeGitHubDeviceAuthorization(
   authorization: GitHubPasskeyAuthorization, assertion: GitHubPasskeyAssertion,

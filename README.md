@@ -30,3 +30,12 @@ Apache-2.0; see LICENSE and NOTICE. Earlier MIT attribution remains in LICENSE-M
 The package is an independently consumable unit. Callers reference its documented
 interface through a versioned dependency and own application-specific composition
 and integration.
+
+## Continuing device authorization
+
+When polling returns `status: 'pending'`, replace the previous attempt with
+`result.attempt` and wait until `result.nextPollUnixMs` before polling again.
+The updated attempt preserves the cumulative five-second increase for each
+`slow_down` response. Attempts contain a device code: keep them local and do
+not log, publish, or include them in public reports. Serialize polling for each
+attempt; this stateless package cannot prevent reuse of an older attempt.
