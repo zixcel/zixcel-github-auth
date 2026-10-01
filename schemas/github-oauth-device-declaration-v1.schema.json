@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "zixcel://github/oauth-device-declaration/v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "providerId",
+    "toolId",
+    "method",
+    "contextNamespace",
+    "projectionSchema",
+    "secretPolicy",
+    "completionPolicy",
+    "scopes",
+    "publicInputs",
+    "placements"
+  ],
+  "properties": {
+    "schema": {
+      "const": "zixcel://github/oauth-device-declaration/v1"
+    },
+    "providerId": {
+      "const": "github"
+    },
+    "toolId": {
+      "const": "zixcel-github-auth/oauth-device-flow"
+    },
+    "method": {
+      "const": "oauth-device-flow"
+    },
+    "contextNamespace": {
+      "const": "github-connection"
+    },
+    "projectionSchema": {
+      "const": "hathq://hat-github-operator/connection/v1"
+    },
+    "secretPolicy": {
+      "const": "crowsi-custody-only"
+    },
+    "completionPolicy": {
+      "const": "verified-connection-only"
+    },
+    "scopes": {
+      "enum": [
+        [
+          "repo",
+          "workflow",
+          "read:org"
+        ],
+        [
+          "repo",
+          "workflow",
+          "read:org",
+          "delete_repo"
+        ]
+      ]
+    },
+    "publicInputs": {
+      "const": []
+    },
+    "placements": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1
+    }
+  }
+}

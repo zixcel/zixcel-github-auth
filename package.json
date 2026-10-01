@@ -1,0 +1,36 @@
+{
+  "name": "@zixcel/github-auth",
+  "version": "0.1.0",
+  "description": "Local-first GitHub OAuth Device Flow plans for Zixcel consumers",
+  "type": "module",
+  "license": "Apache-2.0",
+  "files": [
+    "src",
+    "schemas",
+    "README.md",
+    "LICENSE",
+    "repository.toml",
+    "LICENSE-MIT",
+    "NOTICE"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.mjs"
+    },
+    "./schema": "./schemas/github-oauth-device-declaration-v1.schema.json"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "prepack": "pnpm test"
+  },
+  "engines": {
+    "node": "^22.0.0 || ^24.0.0",
+    "pnpm": ">=10 <11"
+  },
+  "packageManager": "pnpm@10.29.3",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
