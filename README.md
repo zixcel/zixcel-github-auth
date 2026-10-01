@@ -6,7 +6,7 @@ Provider-specific GitHub OAuth Device Flow plans separated from product UI, HTTP
 - Require no client secret, app private key or callback server.
 - Pass access tokens directly to the injected custody port, never to result objects.
 - Crowsi Credential Agent issues and stores `connection_ref`.
-- No consumer-specific HAT, Hatter or Coela concepts.
+- Callers own application-specific concepts and orchestration.
 - Consumers measure declared placement instead of assuming availability.
 - Start only when provider networking and Crowsi custody are available in the same local placement.
 
@@ -24,3 +24,9 @@ Request `delete_repo` only with `githubAuthDeclaration({ allowRepositoryDeletion
 ## License
 
 Apache-2.0; see LICENSE and NOTICE. Earlier MIT attribution remains in LICENSE-MIT. Prior permissions and third-party terms remain effective. Private registration, credentials and runtime state are excluded. Generated `.tgz` archives are neither source-controlled nor included in package contents.
+
+## Package integration
+
+The package is an independently consumable unit. Callers reference its documented
+interface through a versioned dependency and own application-specific composition
+and integration.
