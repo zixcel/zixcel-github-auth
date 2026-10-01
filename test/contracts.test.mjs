@@ -75,7 +75,9 @@ test('keeps pending responses bounded and rejects provider substitution', async 
       assert.equal(request.url, 'https://github.com/login/oauth/access_token')
       return { status: 200, body: JSON.stringify({ error: 'authorization_pending' }) }
     } }, {})
-  assert.deepEqual(pending, { status: 'pending', nextPollUnixMs: 11_000 })
+  assert.equal(pending.status, 'pending')
+  assert.equal(pending.nextPollUnixMs, 11_000)
+  assert.equal(pending.attempt.nextPollUnixMs, 11_000)
   await assert.rejects(() => requestGitHubDeviceCode(declaration,
     { clientId: '../unsafe', nowUnixMs: 1 }, {}), /client-id-invalid/u)
 })
@@ -102,4 +104,35 @@ test('deletion scope is explicit and unexpected scope elevation never enters cus
       }) } } }, custody), /scope-invalid/u)
   }
   assert.equal(entered, 0)
+})
+
+test('carries cumulative slow-down and pending deadlines into subsequent polls', async () => {
+  let attempt = await requestGitHubDeviceCode(declaration,
+    { clientId: 'Iv23Public', nowUnixMs: 1_000 }, {
+      async send() { return { status: 200, body: deviceWire } }
+    })
+  let calls = 0
+  const responses = ['slow_down', 'slow_down', 'authorization_pending']
+  const transport = { async send() {
+    calls++
+    return { status: 200, body: JSON.stringify({ error: responses.shift() }) }
+  } }
+  for (const [now, interval, next] of [
+    [6_000, 10, 16_000], [16_000, 15, 31_000], [31_000, 15, 46_000]
+  ]) {
+    const result = await pollGitHubDeviceAuthorization(attempt,
+      { nowUnixMs: now }, transport, {})
+    assert.equal(result.attempt.intervalSeconds, interval)
+    assert.equal(result.attempt.nextPollUnixMs, next)
+    assert.equal(Object.isFrozen(result.attempt), true)
+    attempt = result.attempt
+    const count = calls
+    await assert.rejects(() => pollGitHubDeviceAuthorization(attempt,
+      { nowUnixMs: next - 1 }, transport, {}), /poll-early/u)
+    assert.equal(calls, count)
+  }
+  const count = calls
+  await assert.rejects(() => pollGitHubDeviceAuthorization(attempt,
+    { nowUnixMs: attempt.expiresAtUnixMs }, transport, {}), /attempt-expired/u)
+  assert.equal(calls, count)
 })
