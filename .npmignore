@@ -1,3 +1,4 @@
+# Keep private registration and generated files out of npm distributions.
 # Local registration, runtime data and secrets (never source defaults).
 /registration/
 /.local/

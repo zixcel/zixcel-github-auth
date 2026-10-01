@@ -11,7 +11,8 @@
     "LICENSE",
     "repository.toml",
     "LICENSE-MIT",
-    "NOTICE"
+    "NOTICE",
+    "!**/*.tgz"
   ],
   "exports": {
     ".": {
