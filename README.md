@@ -1,14 +1,28 @@
 # @zixcel/github-auth
 
-Provider-specific GitHub OAuth Device Flow plans separated from product UI, HTTP transport and credential custody. Users do not create an app; the distributor registers a public client ID once and enables Device Flow.
+Add GitHub Device Flow to an application using an explicit public client registration.
 
-- Communicate only through injected transport; never open a browser.
-- Require no client secret, app private key or callback server.
-- Pass access tokens directly to the injected custody port, never to result objects.
-- Crowsi Credential Agent issues and stores `connection_ref`.
-- Callers own application-specific concepts and orchestration.
-- Consumers measure declared placement instead of assuming availability.
-- Start only when provider networking and Crowsi custody are available in the same local placement.
+## What you can do
+
+- Present the device authorization steps.
+- Track polling, expiry and authorization results.
+
+## Current scope
+
+The application owns client registration, presentation and credential custody. This package does not retain a user token as repository content.
+
+Package distribution is not activated by this documentation. Use the checked-in source and the declared dependency versions; published availability must be verified separately.
+
+## Getting started
+
+Use `pnpm@10.29.3` and the Node.js version declared in `engines` in `package.json`. Run from this repository:
+
+```sh
+pnpm install --frozen-lockfile
+pnpm test
+```
+
+## Integration example
 
 ```js
 import { githubAuthDeclaration, requestGitHubDeviceCode }
@@ -19,23 +33,10 @@ const attempt = await requestGitHubDeviceCode(declaration,
   { clientId: 'Iv23Public', nowUnixMs: Date.now() }, transport)
 ```
 
-Request `delete_repo` only with `githubAuthDeclaration({ allowRepositoryDeletion: true })`. Requested scopes are bound to the attempt; unexpected additions and missing scopes are rejected before custody transfer. The default classic OAuth `repo` scope includes provider-side writes. Configure local read-only limits in `zixcel-github`; use a GitHub App or fine-grained token enrolled in Crowsi when provider-side least privilege is required. Deletion scope does not grant organization administration rights.
+## Documentation and source
 
-## License
+[Interface reference](docs/interface-reference.md)
 
-Apache-2.0; see LICENSE and NOTICE. Earlier MIT attribution remains in LICENSE-MIT. Prior permissions and third-party terms remain effective. Private registration, credentials and runtime state are excluded. Generated `.tgz` archives are neither source-controlled nor included in package contents.
+[Usage guide](docs/getting-started.md)
 
-## Package integration
-
-The package is an independently consumable unit. Callers reference its documented
-interface through a versioned dependency and own application-specific composition
-and integration.
-
-## Continuing device authorization
-
-When polling returns `status: 'pending'`, replace the previous attempt with
-`result.attempt` and wait until `result.nextPollUnixMs` before polling again.
-The updated attempt preserves the cumulative five-second increase for each
-`slow_down` response. Attempts contain a device code: keep them local and do
-not log, publish, or include them in public reports. Serialize polling for each
-attempt; this stateless package cannot prevent reuse of an older attempt.
+[Schemas](schemas) · [Implementation and public interfaces](src) · [Verification cases](test) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [License](LICENSE) · [Attribution notices](NOTICE)
