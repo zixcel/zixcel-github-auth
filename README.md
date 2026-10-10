@@ -40,3 +40,16 @@ const attempt = await requestGitHubDeviceCode(declaration,
 [Usage guide](docs/getting-started.md)
 
 [Schemas](schemas) · [Implementation and public interfaces](src) · [Verification cases](test) · [Contributing](CONTRIBUTING.md) · [Security reporting](SECURITY.md) · [License](LICENSE) · [Attribution notices](NOTICE)
+
+## Typed development
+
+Use Node 24.15 or later and pnpm 10.29.3. Contract types are in `src/types`. Runtime validation, provider wire handling and custody challenge validation have separate modules. Executable ESM and declarations are generated together in `dist`.
+
+```sh
+pnpm install --frozen-lockfile --ignore-scripts --config.auto-install-peers=false
+pnpm run typecheck
+pnpm test
+pnpm pack
+```
+
+Tests inject synthetic transport and custody ports; they do not access a real GitHub account. A pending provider response never establishes a connection. The custody verifier owns challenge expiry and user-proof validation before issuing a connection receipt.

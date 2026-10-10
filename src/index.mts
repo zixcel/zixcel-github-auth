@@ -7,3 +7,4 @@ export {
   completeGitHubDeviceAuthorization, pollGitHubDeviceAuthorization,
   requestGitHubDeviceCode,
 } from './device-flow.mjs'
+export type * from './types/contracts.mjs'

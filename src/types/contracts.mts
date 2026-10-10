@@ -1,3 +1,4 @@
+/** Provider-specific contracts; credentials pass only into an injected custody port. */
 export interface GitHubAuthDeclaration {
   schema: 'zixcel://github/oauth-device-declaration/v1'
   providerId: 'github'
@@ -51,28 +52,19 @@ export interface GitHubPasskeyAssertion {
   authenticatorData: string
   signature: string
 }
-export function githubAuthDeclaration(options?: { allowRepositoryDeletion?: boolean }): GitHubAuthDeclaration
-export function validateGitHubAuthDeclaration(value: unknown): boolean
-export function selectGitHubAuthPlacement(declaration: GitHubAuthDeclaration,
-  capabilities: Array<{ id: string, available: boolean }>): {
-    placements: Array<GitHubAuthDeclaration['placements'][number] & { available: boolean }>,
-    selectedPlacementId: string | null
-  }
-export function requestGitHubDeviceCode(declaration: GitHubAuthDeclaration,
-  input: { clientId: string, nowUnixMs: number },
-  transport: AuthTransport): Promise<GitHubDeviceAttempt>
-export function acceptGitHubDeviceCodeResponse(declaration: GitHubAuthDeclaration,
-  input: { clientId: string, nowUnixMs: number,
-    response: { status: number, body: string } }): GitHubDeviceAttempt
-export function pollGitHubDeviceAuthorization(attempt: GitHubDeviceAttempt,
-  input: { nowUnixMs: number }, transport: AuthTransport,
-  custody: GitHubTokenCustody): Promise<{ status: 'pending', nextPollUnixMs: number,
-      attempt: GitHubDeviceAttempt }
-    | { status: 'user-verification-required', authorization: GitHubPasskeyAuthorization }>
-export function completeGitHubDeviceAuthorization(
-  authorization: GitHubPasskeyAuthorization, assertion: GitHubPasskeyAssertion,
-  custody: GitHubTokenCustody
-): Promise<{ status: 'connected', connectionRef: string }>
-export const DECLARATION_SCHEMA: string
-export const ATTEMPT_SCHEMA: string
-export const TOOL_ID: string
+
+export interface DeclarationOptions { allowRepositoryDeletion?: boolean }
+export interface Capability { id: string; available: boolean }
+export interface DeviceCodeInput { clientId: string; nowUnixMs: number }
+export interface ProviderResponse { status: number; body: string }
+export interface AcceptedDeviceInput extends DeviceCodeInput { response: ProviderResponse }
+export interface PollInput { nowUnixMs: number }
+export interface PendingResult { status: 'pending'; nextPollUnixMs: number; attempt: GitHubDeviceAttempt }
+export type PollResult = PendingResult | {
+  status: 'user-verification-required'; authorization: GitHubPasskeyAuthorization;
+}
+export interface ConnectedResult { status: 'connected'; connectionRef: string }
+export interface PlacementResult {
+  placements: Array<GitHubAuthDeclaration['placements'][number] & { available: boolean }>;
+  selectedPlacementId: string | null;
+}

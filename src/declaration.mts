@@ -1,15 +1,17 @@
-import { freeze, invalid } from './validation.mjs'
+import type { GitHubAuthDeclaration, DeclarationOptions, Capability, PlacementResult } from './types/contracts.mjs'
+import { freeze, invalid, isRecord, sameStrings, exactKeys } from './validation.mjs'
 
 export const DECLARATION_SCHEMA = 'zixcel://github/oauth-device-declaration/v1'
 export const TOOL_ID = 'zixcel-github-auth/oauth-device-flow'
 
-export function githubAuthDeclaration(options = {}) {
+/** Repository-deletion scope is opt-in; default declarations cannot elevate it. */
+export function githubAuthDeclaration(options: DeclarationOptions = {}): GitHubAuthDeclaration {
   if (!options || typeof options !== 'object' || Array.isArray(options)
     || Object.keys(options).some(key => key !== 'allowRepositoryDeletion')
     || (options.allowRepositoryDeletion !== undefined && typeof options.allowRepositoryDeletion !== 'boolean')) invalid('options')
-  const scopes = ['repo', 'workflow', 'read:org']
-  if (options.allowRepositoryDeletion === true) scopes.push('delete_repo')
-  return freeze({ schema: DECLARATION_SCHEMA, providerId: 'github', toolId: TOOL_ID,
+  const scopes: GitHubAuthDeclaration['scopes'] = options.allowRepositoryDeletion === true
+    ? ['repo', 'workflow', 'read:org', 'delete_repo'] : ['repo', 'workflow', 'read:org']
+  return freeze<GitHubAuthDeclaration>({ schema: DECLARATION_SCHEMA, providerId: 'github', toolId: TOOL_ID,
     method: 'oauth-device-flow', contextNamespace: 'github-connection',
     projectionSchema: 'hathq://hat-github-operator/connection/v1',
     secretPolicy: 'crowsi-custody-only', completionPolicy: 'verified-connection-only',
@@ -20,9 +22,12 @@ export function githubAuthDeclaration(options = {}) {
     ] })
 }
 
-export function selectGitHubAuthPlacement(declaration, capabilities) {
+/** Only a complete local provider/custody capability set can be selected. */
+export function selectGitHubAuthPlacement(declaration: GitHubAuthDeclaration, capabilities: Capability[]): PlacementResult {
   validateDeclaration(declaration)
-  if (!Array.isArray(capabilities) || capabilities.length > 16) invalid('capabilities')
+  if (!Array.isArray(capabilities) || capabilities.length > 16
+    || capabilities.some(value => !isRecord(value) || typeof value.id !== 'string'
+      || typeof value.available !== 'boolean')) invalid('capabilities')
   if (new Set(capabilities.map(value => value?.id)).size !== capabilities.length) {
     invalid('capabilities')
   }
@@ -33,12 +38,13 @@ export function selectGitHubAuthPlacement(declaration, capabilities) {
     selectedPlacementId: placements.find(value => value.available)?.id ?? null })
 }
 
-export function validateGitHubAuthDeclaration(value) {
+export function validateGitHubAuthDeclaration(value: unknown): value is GitHubAuthDeclaration {
   try { validateDeclaration(value); return true } catch { return false }
 }
 
-export function validateDeclaration(value) {
-  const exact = value && exactKeys(value, ['schema', 'providerId', 'toolId', 'method',
+/** Assert the exact runtime tuple, not its potentially ambiguous joined string. */
+export function validateDeclaration(value: unknown): asserts value is GitHubAuthDeclaration {
+  const exact = isRecord(value) && exactKeys(value, ['schema', 'providerId', 'toolId', 'method',
     'contextNamespace', 'projectionSchema', 'secretPolicy', 'completionPolicy', 'scopes',
     'publicInputs', 'placements']) && value.schema === DECLARATION_SCHEMA
     && value.providerId === 'github' && value.toolId === TOOL_ID
@@ -47,19 +53,15 @@ export function validateDeclaration(value) {
     && value.secretPolicy === 'crowsi-custody-only'
     && value.completionPolicy === 'verified-connection-only'
     && Array.isArray(value.publicInputs) && value.publicInputs.length === 0
-    && Array.isArray(value.scopes) && ['repo workflow read:org', 'repo workflow read:org delete_repo'].includes(value.scopes.join(' '))
+    && (sameStrings(value.scopes, ['repo', 'workflow', 'read:org']) || sameStrings(value.scopes, ['repo', 'workflow', 'read:org', 'delete_repo']))
     && Array.isArray(value.placements) && value.placements.length === 1
     && exactPlacement(value.placements[0])
   if (!exact) invalid('declaration')
 }
 
-function exactPlacement(value) {
-  return value && exactKeys(value, ['id', 'kind', 'requiredCapabilities'])
+function exactPlacement(value: unknown): boolean {
+  return isRecord(value) && exactKeys(value, ['id', 'kind', 'requiredCapabilities'])
     && value.id === 'owner-local' && value.kind === 'owner-local'
-    && Array.isArray(value.requiredCapabilities)
-    && value.requiredCapabilities.join(' ') ===
-      'oauth-client-configuration provider-network crowsi-token-custody'
-}
-function exactKeys(value, keys) {
-  return Object.keys(value).sort().join('\n') === [...keys].sort().join('\n')
+    && sameStrings(value.requiredCapabilities,
+      ['oauth-client-configuration', 'provider-network', 'crowsi-token-custody'])
 }

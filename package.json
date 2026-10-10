@@ -1,37 +1,43 @@
 {
   "name": "@zixcel/github-auth",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Local-first GitHub OAuth Device Flow plans for Zixcel consumers",
   "type": "module",
   "license": "Apache-2.0",
   "files": [
-    "src",
+    "dist",
     "schemas",
     "README.md",
     "LICENSE",
     "repository.toml",
     "LICENSE-MIT",
-    "NOTICE",
-    "!**/*.tgz"
+    "NOTICE"
   ],
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "import": "./src/index.mjs"
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
     },
     "./schema": "./schemas/github-oauth-device-declaration-v1.schema.json"
   },
   "scripts": {
-    "test": "node --test test/*.test.mjs",
-    "prepack": "pnpm test"
+    "build": "node scripts/clean-dist.mts && tsc -p tsconfig.json",
+    "typecheck": "pnpm run build && tsc -p tsconfig.test.json",
+    "test": "pnpm run build && node --test test/*.test.mts",
+    "prepack": "pnpm run typecheck && pnpm test"
   },
   "engines": {
-    "node": "^22.0.0 || ^24.0.0",
+    "node": ">=24.15.0 <25",
     "pnpm": ">=10 <11"
   },
   "packageManager": "pnpm@10.29.3",
   "publishConfig": {
     "access": "public",
-    "provenance": true
+    "provenance": true,
+    "registry": "https://registry.npmjs.org"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3"
   }
 }
