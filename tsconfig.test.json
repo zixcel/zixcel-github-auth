@@ -1,0 +1,19 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "types": [
+      "node"
+    ],
+    "erasableSyntaxOnly": true
+  },
+  "include": [
+    "src/**/*.mts",
+    "test/**/*.mts",
+    "scripts/**/*.mts"
+  ]
+}
