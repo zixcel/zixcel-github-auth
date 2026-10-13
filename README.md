@@ -53,3 +53,5 @@ pnpm pack
 ```
 
 Tests inject synthetic transport and custody ports; they do not access a real GitHub account. A pending provider response never establishes a connection. The custody verifier owns challenge expiry and user-proof validation before issuing a connection receipt.
+
+[OSS responsibility and source completion](docs/oss-source-contract.md) defines the supported package boundary and required acceptance. It does not declare unexecuted source, distribution or production checks complete.

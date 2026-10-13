@@ -1,0 +1,214 @@
+{
+  "repository": "zixcel/zixcel-github-auth",
+  "purpose": "Add GitHub Device Flow to an application using an explicit public client registration.",
+  "responsibility_boundary": "Own the named reusable integration/data mechanism. Product roles/UI and operational approvals stay with consumers; transport/custody reuse managed Crowsi components where capabilities fit. Planning-only APIs must remain clearly distinguished from implemented external operations.",
+  "packages": [
+    {
+      "manifest": "package.json",
+      "package": "@zixcel/github-auth",
+      "ecosystem": "npm",
+      "description": "Local-first GitHub OAuth Device Flow plans for Zixcel consumers",
+      "interfaces": {
+        "exports": {
+          ".": {
+            "types": "./dist/index.d.mts",
+            "import": "./dist/index.mjs"
+          },
+          "./schema": "./schemas/github-oauth-device-declaration-v1.schema.json"
+        },
+        "bin": {},
+        "main": null,
+        "types": null
+      },
+      "declared_commands": {
+        "build": "node scripts/clean-dist.mts && tsc -p tsconfig.json",
+        "typecheck": "pnpm run build && tsc -p tsconfig.test.json",
+        "test": "pnpm run build && node --test test/*.test.mts",
+        "prepack": "pnpm run typecheck && pnpm test"
+      }
+    }
+  ],
+  "schema_definitions": [
+    "schemas/github-oauth-device-declaration-v1.schema.json"
+  ],
+  "test_sources": [
+    ".github/scripts/artifact-record.test.mts",
+    "test/boundaries.test.mts",
+    "test/contracts.test.mts",
+    "test/fixtures.mts",
+    "test/polling.test.mts",
+    "tsconfig.test.json"
+  ],
+  "example_sources": [],
+  "workflow_definitions": [
+    {
+      "path": ".github/workflows/ci.yml",
+      "jobs": [
+        {
+          "job": "test",
+          "condition": null,
+          "runs_on": "ubuntu-latest",
+          "steps": [
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/checkout@11d5960a326750d5838078e36cf38b85af677262",
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020",
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "npm install --global --ignore-scripts pnpm@10.29.3",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "pnpm install --frozen-lockfile --ignore-scripts --config.auto-install-peers=false",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "pnpm run typecheck",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "pnpm test",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "pnpm pack",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": "pnpm audit --audit-level=low",
+              "uses": null,
+              "condition": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/oss-policy.yml",
+      "jobs": [
+        {
+          "job": "repository-policy",
+          "condition": null,
+          "runs_on": "ubuntu-latest",
+          "steps": [
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+              "condition": null
+            },
+            {
+              "name": "Verify repository policy",
+              "run": "python3 .github/oss-policy-check.py",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Verify policy regression tests",
+              "run": "cd .github && python3 -m unittest discover -s policy-tests",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Check policy types",
+              "run": "python3 -m venv \"$RUNNER_TEMP/policy-types\"\n\"$RUNNER_TEMP/policy-types/bin/pip\" install -r .github/policy/requirements.txt\n\"$RUNNER_TEMP/policy-types/bin/mypy\" --strict .github/policy .github/oss-policy-check.py .github/policy-tests\n",
+              "uses": null,
+              "condition": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "path": ".github/workflows/prepare-npm-artifact.yml",
+      "jobs": [
+        {
+          "job": "prepare",
+          "condition": "github.ref == 'refs/heads/main' && github.event.repository.private == false",
+          "runs_on": "ubuntu-24.04",
+          "steps": [
+            {
+              "name": "Require the selected source",
+              "run": "[[ \"$EXPECTED_SHA\" =~ ^[a-f0-9]{40}$ && \"$EXPECTED_SHA\" == \"$GITHUB_SHA\" ]]\n",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803",
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38",
+              "condition": null
+            },
+            {
+              "name": "Isolate configuration and public registry cache",
+              "run": ": > \"$RUNNER_TEMP/empty-user.npmrc\"\n: > \"$RUNNER_TEMP/empty-global.npmrc\"\necho \"NPM_CONFIG_USERCONFIG=$RUNNER_TEMP/empty-user.npmrc\" >> \"$GITHUB_ENV\"\necho \"NPM_CONFIG_GLOBALCONFIG=$RUNNER_TEMP/empty-global.npmrc\" >> \"$GITHUB_ENV\"\necho \"NPM_CONFIG_CACHE=$RUNNER_TEMP/release-cache\" >> \"$GITHUB_ENV\"\necho \"NPM_CONFIG_REGISTRY=https://registry.npmjs.org\" >> \"$GITHUB_ENV\"\n",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Install pinned package tools without lifecycle hooks",
+              "run": "npm install --global --ignore-scripts --no-audit --no-fund npm@11.12.1 pnpm@10.29.3",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Validate isolated package and dependencies",
+              "run": "pnpm install --frozen-lockfile --ignore-scripts --config.auto-install-peers=false\npnpm run typecheck\npnpm run test\npnpm audit --audit-level=low\n",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Check release-tool contracts",
+              "run": "node ./node_modules/typescript/bin/tsc -p .github/tsconfig.release.json",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Test artifact metadata boundaries",
+              "run": "node --test .github/scripts/artifact-record.test.mts",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": "Generate the executable distribution without lifecycle hooks",
+              "run": "mkdir -p \"$GITHUB_WORKSPACE/outgoing\"\nnpm pack --workspaces=false --ignore-scripts --json --pack-destination \"$GITHUB_WORKSPACE/outgoing\" > \"$RUNNER_TEMP/pack.json\"\nnode \"$GITHUB_WORKSPACE/.github/scripts/artifact-receipt.mts\" \"$RUNNER_TEMP/pack.json\" \"$GITHUB_WORKSPACE/outgoing\"\n",
+              "uses": null,
+              "condition": null
+            },
+            {
+              "name": null,
+              "run": null,
+              "uses": "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a",
+              "condition": null
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "evidence_policy": "Declarations and source paths are not proof of an executed acceptance. Exact CI head and result are recorded separately. No live accounts or production acceptance is inferred."
+}
