@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "repository": "zixcel/zixcel-github-auth",
+  "defaultBranch": "main",
+  "requiredWorkflows": [
+    "ci.yml",
+    "oss-policy.yml"
+  ],
+  "packages": [
+    {
+      "ecosystem": "npm",
+      "manifest": "package.json",
+      "name": "@zixcel/github-auth",
+      "installDirectory": "."
+    }
+  ]
+}
