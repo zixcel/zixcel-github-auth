@@ -43,5 +43,12 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/zixcel/zixcel-github-auth.git"
-  }
+  },
+  "keywords": [
+    "github-api",
+    "oauth2",
+    "device-flow",
+    "authentication",
+    "typescript"
+  ]
 }
