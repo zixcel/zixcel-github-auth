@@ -46,7 +46,7 @@ const attempt = await requestGitHubDeviceCode(declaration,
 Use Node 24.15 or later and pnpm 10.29.3. Contract types are in `src/types`. Runtime validation, provider wire handling and custody challenge validation have separate modules. Executable ESM and declarations are generated together in `dist`.
 
 ```sh
-pnpm install --frozen-lockfile --ignore-scripts --config.auto-install-peers=false
+pnpm install --frozen-lockfile --ignore-scripts
 pnpm run typecheck
 pnpm test
 pnpm pack

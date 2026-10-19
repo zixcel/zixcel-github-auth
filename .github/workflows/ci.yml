@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '24'
       - run: npm install --global --ignore-scripts pnpm@10.29.3
-      - run: pnpm install --frozen-lockfile --ignore-scripts --config.auto-install-peers=false
+      - run: pnpm install --frozen-lockfile --ignore-scripts
       - run: pnpm run typecheck
       - run: pnpm test
       - run: pnpm pack

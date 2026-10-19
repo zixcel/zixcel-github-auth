@@ -40,7 +40,7 @@ jobs:
       - name: Validate isolated package and dependencies
         working-directory: .
         run: |
-          pnpm install --frozen-lockfile --ignore-scripts --config.auto-install-peers=false
+          pnpm install --frozen-lockfile --ignore-scripts
           pnpm run typecheck
           pnpm run test
           pnpm audit --audit-level=low
